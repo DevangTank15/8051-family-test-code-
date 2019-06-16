@@ -1,5 +1,5 @@
 #include "reg51.h"
-
+#define F_CPU   110592
 //please connect almost 330 ohm - 1kiloohm pull up resister on port pin.
         
 int main(void)
@@ -19,5 +19,9 @@ void Delay(unsigned int ivalue)
 {
     unsigned int i,j
     for(i = 0; i < ivalue; i++)
+#if (F_CPU == 110592)
         for(j = 0; j < 1150; j++);
+#else
+        for(j = 0; j < 1200; j++);
+#endif
 }
