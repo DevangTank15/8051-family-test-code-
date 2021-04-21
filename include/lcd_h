@@ -1,0 +1,24 @@
+extern sbit RS;
+#ifdef WANT_TO_READ_FROM_LCD
+extern sbit RW;
+#endif
+extern sbit EN;
+#ifndef FOUR_BIT_MODE
+extern sbit D0;
+extern sbit D1;
+extern sbit D2;
+extern sbit D3;
+#endif
+extern sbit D4;
+extern sbit D5;
+extern sbit D6;
+extern sbit D7;
+
+typedef enum {
+    LCD_COMMAND_MODE = 0,
+    LCD_DATA_MODE = 1
+} CurrentDataMode;
+
+void LcdCmdData(unsigned char LCDData, CurrentDataMode currentDataMode){
+    
+}
