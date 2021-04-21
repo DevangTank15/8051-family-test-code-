@@ -1,1 +1,0 @@
-#define PIN_D0  P1
