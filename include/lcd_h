@@ -1,24 +1,83 @@
-extern sbit RS;
+#include "main.h" 
+#include "stdint.h" 
+
+extern sbit LCD_RS;
 #ifdef WANT_TO_READ_FROM_LCD
-extern sbit RW;
+extern sbit LCD_RW;
 #endif
-extern sbit EN;
+extern sbit LCD_EN;
 #ifndef FOUR_BIT_MODE
-extern sbit D0;
-extern sbit D1;
-extern sbit D2;
-extern sbit D3;
+extern sbit LCD_D0;
+extern sbit LCD_D1;
+extern sbit LCD_D2;
+extern sbit LCD_D3;
 #endif
-extern sbit D4;
-extern sbit D5;
-extern sbit D6;
-extern sbit D7;
+extern sbit LCD_D4;
+extern sbit LCD_D5;
+extern sbit LCD_D6;
+extern sbit LCD_D7;
 
 typedef enum {
     LCD_COMMAND_MODE = 0,
     LCD_DATA_MODE = 1
 } CurrentDataMode;
 
-void LcdCmdData(unsigned char LCDData, CurrentDataMode currentDataMode){
-    
+void LCDPort(uint8_t lcddata)
+{
+    D0 = ((BytetoBitstr*)(&lcddata))->bit0;
+    D1 = ((BytetoBitstr*)(&lcddata))->bit1;
+    D2 = ((BytetoBitstr*)(&lcddata))->bit2;
+    D3 = ((BytetoBitstr*)(&lcddata))->bit3;
+    D4 = ((BytetoBitstr*)(&lcddata))->bit4;
+    D5 = ((BytetoBitstr*)(&lcddata))->bit5;
+    D6 = ((BytetoBitstr*)(&lcddata))->bit6;
+    D7 = ((BytetoBitstr*)(&lcddata))->bit7;
+    return TRUE;
+}
+
+void LCDBusyCheck(void)
+{ 
+    LCD_D7 = 1;             //Make D7th bit of LCD as i/p
+    LCD_EN = 1;             //Make port pin as o/p
+    LCD_RS = 0;             //Selected command register
+    LCD_RW = 1;             //We are reading
+ 
+    while(LCD_D7) {         //read busy flag again and again till it becomes 0
+        LCD_EN = 0;         //Enable H->
+        LCD_EN = 1;
+    } 
+}
+
+void LcdCmdData(uint8_t LCDData, CurrentDataMode currentDataMode){
+    RS = currentDataMode;
+#ifdef WANT_TO_READ_FROM_LCD
+    RW = 0;
+#endif
+
+#ifdef FOUR_BIT_MODE
+    LCDPort(LCDData & 0xf0);
+#ifdef WANT_TO_READ_FROM_LCD
+    LCDBusyCheck();
+#else 
+    Delay(10);
+#endif
+    LCDPort((uint8_t)((LCDData & 0x0f) << 4));
+#ifdef WANT_TO_READ_FROM_LCD
+    LCDBusyCheck();
+#else 
+    Delay(10);
+#endif
+#else
+    LCDPort(LCDData);
+#endif    
+}
+
+void PrintCustomCharacter(uint8_t* CustomChardata)
+{
+    LcdCmdData(CGRAM_1_CUSTCHAR_LOCATION, LCD_COMMAND_MODE);
+    uint8_t Counter = 0;
+    for(; Counter < 8; Counter++){
+        LCDCmdData(CustomChardata[Counter], LCD_DATA_MODE);
+    }
+    LcdCmdData(0, LCD_COMMAND_MODE);
 }
